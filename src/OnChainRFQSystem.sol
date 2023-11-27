@@ -1,18 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {IReactor} from "UniswapX/src/interfaces/IReactor.sol";
-import {SignedOrder} from "UniswapX/src/base/ReactorStructs.sol";
 import {QuoteRequest, QuoteRequestLib} from "./lib/QuoteRequestLib.sol";
 
-contract OnChainRFQ {
+/// A simple on-chain RFQ system using a commit-reveal scheme and staking to prevent spam
+/// extensions to this can include slashing for not revealing or fading
+/// @dev best used on L2s where gas is cheap
+/// the client must eventually build the order with the results from calling `getWinningQuote`
+contract OnChainRFQSystem {
     using QuoteRequestLib for QuoteRequest;
-
     // Mapping of request hash to mapping of quoter to commitment
+
     mapping(bytes32 => mapping(address => bytes32)) public commitments;
     mapping(bytes32 => uint256) public winningQuote;
     mapping(bytes32 => address) public winningQuoter;
-
+    // Mapping of address to staked amount
     mapping(address => uint256) public stake;
 
     error NotEnoughStake();
@@ -30,7 +32,7 @@ contract OnChainRFQ {
         reactor = _reactor;
     }
 
-    /// @notice Start an auction for an order
+    /// @notice Start an RFQ auction
     /// fillers must listen for the AuctionStarted event and then submit their quotes
     function startAuction(QuoteRequest memory request) public {
         require(block.timestamp < request.auctionStart);
@@ -45,14 +47,18 @@ contract OnChainRFQ {
         emit AuctionStarted(request.hash(), request);
     }
 
+    /// @notice Generate a commitment for the given order and quote
+    /// can be called offchain
     function generateCommitment(QuoteRequest memory order, uint256 quote) public view returns (bytes32) {
         return keccak256(abi.encode(msg.sender, order, quote));
     }
 
+    /// @notice Commit a quote for the auction
+    /// the sender must have at least MIN_STAKE
     function commitQuote(QuoteRequest memory request, bytes32 _commitment) public {
         require(block.timestamp < request.auctionEnd);
-        if(stake[msg.sender] < MIN_STAKE) revert NotEnoughStake();
-        
+        if (stake[msg.sender] < MIN_STAKE) revert NotEnoughStake();
+
         commitments[request.hash()][msg.sender] = _commitment;
         emit CommitmentReceived(_commitment, block.timestamp);
     }
@@ -65,7 +71,7 @@ contract OnChainRFQ {
 
         bytes32 hash = request.hash();
         bytes32 commitment = generateCommitment(request, quote);
-        if(commitment != commitments[hash][msg.sender]) {
+        if (commitment != commitments[hash][msg.sender]) {
             revert InvalidCommitment();
         }
         if (quote > winningQuote[hash]) {
@@ -83,7 +89,15 @@ contract OnChainRFQ {
         return (winningQuoter[hash], winningQuote[hash]);
     }
 
+    /// @notice Receive stake
     receive() external payable {
         stake[msg.sender] += msg.value;
+    }
+
+    /// @notice Withdraw stake
+    function withdrawStake(uint256 amount) external {
+        require(stake[msg.sender] >= amount);
+        stake[msg.sender] -= amount;
+        (msg.sender).call{value: amount};
     }
 }
