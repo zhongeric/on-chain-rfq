@@ -13,6 +13,9 @@ contract OnChainRFQ {
     mapping(bytes32 => uint256) public winningQuote;
     mapping(bytes32 => address) public winningQuoter;
 
+    mapping(address => uint256) public stake;
+
+    error NotEnoughStake();
     error InvalidCommitment();
     error ExclusivityPeriodNotOver();
 
@@ -21,6 +24,7 @@ contract OnChainRFQ {
     event AuctionStarted(bytes32 indexed requestHash, QuoteRequest request);
 
     IReactor public reactor;
+    uint256 public constant MIN_STAKE = 1 ether;
 
     constructor(IReactor _reactor) {
         reactor = _reactor;
@@ -47,6 +51,8 @@ contract OnChainRFQ {
 
     function commitQuote(QuoteRequest memory request, bytes32 _commitment) public {
         require(block.timestamp < request.auctionEnd);
+        if(stake[msg.sender] < MIN_STAKE) revert NotEnoughStake();
+        
         commitments[request.hash()][msg.sender] = _commitment;
         emit CommitmentReceived(_commitment, block.timestamp);
     }
@@ -75,5 +81,9 @@ contract OnChainRFQ {
         require(block.timestamp > request.revealDeadline, "Auction not over yet");
         bytes32 hash = request.hash();
         return (winningQuoter[hash], winningQuote[hash]);
+    }
+
+    receive() external payable {
+        stake[msg.sender] += msg.value;
     }
 }
