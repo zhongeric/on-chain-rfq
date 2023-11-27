@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import {InputToken} from "UniswapX/src/base/ReactorStructs.sol";
+import {InputToken, OutputToken} from "UniswapX/src/base/ReactorStructs.sol";
 
 struct QuoteRequest {
     InputToken input;
+    OutputToken output;
     uint256 auctionStart;
     uint256 auctionEnd;
     uint256 revealDeadline;
@@ -17,6 +18,9 @@ library QuoteRequestLib {
         "address inputToken,",
         "uint256 inputStartAmount,",
         "uint256 inputEndAmount,",
+        "address outputToken,",
+        "uint256 outputAmount,",
+        "address outputRecipient,",
         "uint256 auctionStart,",
         "uint256 auctionEnd,",
         "uint256 revealDeadline,",
@@ -35,6 +39,9 @@ library QuoteRequestLib {
                 request.input.token,
                 request.input.amount,
                 request.input.maxAmount,
+                request.output.token,
+                request.output.amount,
+                request.output.recipient,
                 request.auctionStart,
                 request.auctionEnd,
                 request.revealDeadline,

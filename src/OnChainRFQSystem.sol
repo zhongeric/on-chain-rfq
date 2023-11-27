@@ -25,12 +25,7 @@ contract OnChainRFQSystem {
     event CommitmentRevealed(bytes32 indexed commitment, uint256 value, uint256 timestamp);
     event AuctionStarted(bytes32 indexed requestHash, QuoteRequest request);
 
-    IReactor public reactor;
     uint256 public constant MIN_STAKE = 1 ether;
-
-    constructor(IReactor _reactor) {
-        reactor = _reactor;
-    }
 
     /// @notice Start an RFQ auction
     /// fillers must listen for the AuctionStarted event and then submit their quotes
