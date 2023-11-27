@@ -1,0 +1,9 @@
+UniswapX/=lib/UniswapX/
+ds-test/=lib/forge-std/lib/ds-test/src/
+erc4626-tests/=lib/UniswapX/lib/openzeppelin-contracts/lib/erc4626-tests/
+forge-gas-snapshot/=lib/UniswapX/lib/forge-gas-snapshot/src/
+forge-std/=lib/forge-std/src/
+openzeppelin-contracts/=lib/UniswapX/lib/openzeppelin-contracts/
+openzeppelin/=lib/UniswapX/lib/openzeppelin-contracts/contracts/
+permit2/=lib/UniswapX/lib/permit2/
+solmate/=lib/UniswapX/lib/solmate/
