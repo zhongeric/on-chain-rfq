@@ -3,6 +3,9 @@ A contract that runs RFQ (request for quote) auctions onchain without trusted th
 
 This is best used on an L2 where block times are short and gas costs are low. 
 
+Extensions:
+- Use ZK proofs via (Axiom)[https://www.axiom.xyz/] to trustlessly penalize bad actors for not revealing bids or fading an eventual swap.
+
 DISCLAIMER: This is a work in progress and has not been audited. Use at your own risk.
 
 ## Usage
